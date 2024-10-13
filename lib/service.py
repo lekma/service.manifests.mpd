@@ -68,4 +68,4 @@ class DashService(Service):
 # __main__ ---------------------------------------------------------------------
 
 if __name__ == "__main__":
-    DashService().start(timeout=0.5)
+    DashService().start(timeout=0.25)
