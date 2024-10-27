@@ -12,13 +12,16 @@ from adaptive import manifest
 # ------------------------------------------------------------------------------
 # DashHttpServer
 
-
 class DashHttpServer(Server):
 
     def __init__(self, *args, **kwargs):
         super(DashHttpServer, self).__init__(*args, **kwargs)
         self.__url__ = "http://{}:{}".format(*self.server_address)
         self.__manifests__ = {}
+
+    def server_close(self):
+        self.__manifests__.clear()
+        super(DashHttpServer, self).server_close()
 
     def __raise__(self, error, throw=True):
         if not isinstance(error, Exception):
@@ -27,13 +30,15 @@ class DashHttpServer(Server):
         if throw:
             raise error
 
+    # --------------------------------------------------------------------------
+
     def __manifest__(self, *args):
         self.__manifests__[(id := uuid4().hex)] = manifest(*args)
         return buildUrl(self.__url__, "manifest", id=id)
 
     @http()
     def manifest(self, **kwargs):
-        if (id := kwargs.pop("id")):
+        if (id := kwargs.pop("id", None)):
             if (manifest := self.__manifests__.get(id)):
                 return (200, (manifest, "application/dash+xml"), None)
             self.__raise__("Invalid id")
